@@ -19,6 +19,7 @@ public class HelloApplication extends Application {
     private double zoff = 0;
     private double zrot = 0;
     private double xrot = 0;
+    Cube cube;
     private final double[][] localToWorld = {{0.718672, 0.615033, -0.3324214, 0},
             {-0.393732, 0.744416, 0.5539277, 0},
             {0.573024, -0.259959, 0.777216, 0},
@@ -46,7 +47,7 @@ public class HelloApplication extends Application {
         AtomicInteger UP = new AtomicInteger();
         AtomicInteger DOWN = new AtomicInteger();
         AtomicReference<Double> yspeed = new AtomicReference<>((double) 0);
-
+        cube = new Cube(canvas);
         scene.setOnKeyPressed(event -> {
             if (event.getCode() == KeyCode.W) {
                 W.set(1);
@@ -134,7 +135,7 @@ public class HelloApplication extends Application {
 
             }
         }.start();
-
+        cube.draw(canvas.getGraphicsContext2D(), 0 + xoff, Constants.footLevel + yoff, -1000 + zoff, 100, 100, 100, zrot, xrot, 0);
         stage.setScene(scene);
         drawScreen(canvas);
         stage.show();
@@ -142,8 +143,8 @@ public class HelloApplication extends Application {
     }
 
     public void drawScreen(Canvas canvas) {
-        drawCube(canvas.getGraphicsContext2D(), 0 + xoff, Constants.footLevel + yoff, -1000 + zoff, 100, 100, 100, zrot, xrot, 0);
-        drawPyramid(canvas.getGraphicsContext2D(), 200 + xoff, Constants.footLevel + yoff, -500 + zoff, 300, 100, 100, zrot, xrot, 0);
+        cube.draw(canvas.getGraphicsContext2D(), 0 + xoff, Constants.footLevel + yoff, -1000 + zoff, 100, 100, 100, zrot, xrot, 0);
+        drawPyramid(canvas.getGraphicsContext2D(), 200 + xoff, Constants.footLevel + yoff, -500 + zoff, 300, 100, 200, zrot, xrot, 0);
         drawPyramid(canvas.getGraphicsContext2D(), 300 + xoff, Constants.footLevel + yoff, -500 + zoff, 100, 300, 100, zrot, xrot, 0);
     }
 
@@ -199,39 +200,6 @@ public class HelloApplication extends Application {
 
 
     }
-
-    public void drawVerticalSquare(GraphicsContext gc, double xpos, double ypos, double zpos, double lengthX, double lengthY, double lengthZ, double pitch, double roll, double yaw) {
-        double[] coords1 = rotate(pitch, roll, yaw, new double[]{xpos, ypos, zpos});
-        double[] coords2 = rotate(pitch, roll, yaw, new double[]{xpos, ypos - lengthY, zpos});
-        double[] coords3 = rotate(pitch, roll, yaw, new double[]{xpos - lengthX, ypos - lengthY, zpos});
-        double[] coords4 = rotate(pitch, roll, yaw, new double[]{xpos - lengthX, ypos, zpos});
-        coords1 = cameraToScreen(coords1);
-        coords2 = cameraToScreen(coords2);
-        coords3 = cameraToScreen(coords3);
-        coords4 = cameraToScreen(coords4);
-        gc.setLineWidth(5);
-        if (!(coords1[2] > Constants.renderDistance || coords4[2] > Constants.renderDistance)) {
-            gc.strokeLine(coords1[0], coords1[1], coords4[0], coords4[1]);
-        }
-        if (!(coords2[2] > Constants.renderDistance || coords1[2] > Constants.renderDistance)) {
-            gc.strokeLine(coords1[0], coords1[1], coords2[0], coords2[1]);
-        }
-        if (!(coords3[2] > Constants.renderDistance || coords4[2] > Constants.renderDistance)) {
-            gc.strokeLine(coords4[0], coords4[1], coords3[0], coords3[1]);
-        }
-        if (!(coords3[2] > Constants.renderDistance || coords2[2] > Constants.renderDistance)) {
-            gc.strokeLine(coords3[0], coords3[1], coords2[0], coords2[1]);
-        }
-    }
-
-    public void drawCube(GraphicsContext gc, double xpos, double ypos, double zpos, double lengthX, double lengthY, double lengthZ, double pitch, double roll, double yaw) {
-        gc.clearRect(0, 0, Constants.width, Constants.height);
-        drawFlatSquare(gc, xpos, ypos, zpos, lengthX, lengthY, lengthZ, pitch, roll, yaw);
-        drawFlatSquare(gc, xpos, ypos - lengthY, zpos, lengthX, lengthY, lengthZ, pitch, roll, yaw);
-        drawVerticalSquare(gc, xpos, ypos, zpos, lengthX, lengthY, lengthZ, pitch, roll, yaw);
-        drawVerticalSquare(gc, xpos, ypos, zpos - lengthZ, lengthX, lengthY, lengthZ, pitch, roll, yaw);
-    }
-
     public void drawSlantedTriangleFront(GraphicsContext gc, double xpos, double ypos, double zpos, double lengthX, double lengthY, double lengthZ, double pitch, double roll, double yaw) {
         double[] coords1 = rotate(pitch,roll,yaw, new double[]{xpos, ypos, zpos});
         double[] coords2 = rotate(pitch, roll, yaw, new double[]{xpos - (lengthX / 2), ypos - lengthY, zpos - (lengthZ / 2)});
