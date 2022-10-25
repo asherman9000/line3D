@@ -41,6 +41,7 @@ public class HelloApplication extends Application {
         AtomicInteger D = new AtomicInteger();
         AtomicInteger SHIFT = new AtomicInteger();
         AtomicInteger RIGHT = new AtomicInteger();
+        AtomicInteger LEFT = new AtomicInteger();
         AtomicReference<Double> yspeed = new AtomicReference<>((double) 0);
 
         scene.setOnKeyPressed(event -> {
@@ -67,6 +68,9 @@ public class HelloApplication extends Application {
             if (event.getCode() == KeyCode.RIGHT) {
                 RIGHT.set(1);
             }
+            if (event.getCode() == KeyCode.LEFT) {
+                LEFT.set(1);
+            }
 
         });
         scene.setOnKeyReleased(event -> {
@@ -88,6 +92,9 @@ public class HelloApplication extends Application {
             if (event.getCode() == KeyCode.RIGHT) {
                 RIGHT.set(0);
             }
+            if (event.getCode() == KeyCode.LEFT) {
+                LEFT.set(0);
+            }
         });
         new AnimationTimer() {
 
@@ -96,10 +103,11 @@ public class HelloApplication extends Application {
                 double delta = Time.deltaTime();
                 xoff -= 60 * delta * D.get();
                 xoff += 60 * delta * A.get();
-                zoff += 0.15 * delta * W.get();
-                zoff -= 0.15 * delta * S.get();
+                zoff += 15 * delta * W.get();
+                zoff -= 15 * delta * S.get();
                 yoff += yspeed.get();
                 zrot += 1 * delta * RIGHT.get();
+                zrot -= 1 * delta * LEFT.get();
                 yspeed.set(yspeed.get() - (9.8 * delta));
                 if (yoff < -(50 * SHIFT.get())) {
                     yspeed.set(-5d);
@@ -117,10 +125,9 @@ public class HelloApplication extends Application {
     }
 
     public void drawScreen(Canvas canvas) {
-        double[] cube1Coords = rotate(0, 0 , zrot, new double[] {0 + xoff, Constants.footLevel + yoff, -1 + zoff});
-        drawCube(canvas.getGraphicsContext2D(), cube1Coords[0], cube1Coords[1], cube1Coords[2], 100, 300, 0.5);
-        drawPyramid(canvas.getGraphicsContext2D(), 200 + xoff, Constants.footLevel + yoff, -0.5 + zoff, 300, 100, 0.1);
-        drawPyramid(canvas.getGraphicsContext2D(), 300 + xoff, Constants.footLevel + yoff, -0.5 + zoff, 100, 300, 0.1);
+        drawCube(canvas.getGraphicsContext2D(), 0 + xoff, Constants.footLevel + yoff, -100 + zoff, 100, 300, 50, zrot, 0, 0);
+        drawPyramid(canvas.getGraphicsContext2D(), 200 + xoff, Constants.footLevel + yoff, -50 + zoff, 300, 100, 10);
+        drawPyramid(canvas.getGraphicsContext2D(), 300 + xoff, Constants.footLevel + yoff, -50 + zoff, 100, 300, 10);
     }
 
     public static void main(String[] args) {
@@ -142,7 +149,7 @@ public class HelloApplication extends Application {
     }
 
     public double[] cameraToScreen(double[] camera) {
-        double[] screen = {camera[0] / -camera[2], camera[1] / -camera[2]};
+        double[] screen = {camera[0] / -(camera[2]/100), camera[1] / -(camera[2]/100)};
         screen[0] = (screen[0] + (Constants.width / 2d)) / Constants.width;
         screen[1] = (screen[1] + (Constants.height / 2d)) / Constants.height;
         screen[0] *= Constants.width;
@@ -150,11 +157,15 @@ public class HelloApplication extends Application {
         return screen;
     }
 
-    public void drawFlatSquare(GraphicsContext gc, double xpos, double ypos, double zpos, double lengthX, double lengthY, double lengthZ) {
-        double[] coords1 = cameraToScreen(new double[]{xpos, ypos, zpos});
-        double[] coords2 = cameraToScreen(new double[]{xpos, ypos, zpos - lengthZ});
-        double[] coords3 = cameraToScreen(new double[]{xpos - lengthX, ypos, zpos - lengthZ});
-        double[] coords4 = cameraToScreen(new double[]{xpos - lengthX, ypos, zpos});
+    public void drawFlatSquare(GraphicsContext gc, double xpos, double ypos, double zpos, double lengthX, double lengthY, double lengthZ, double pitch, double roll, double yaw) {
+        double[] coords1 = rotate(pitch, roll, yaw, new double[]{xpos, ypos, zpos});
+        double[] coords2 = rotate(pitch, roll, yaw, new double[]{xpos, ypos, zpos - lengthZ});
+        double[] coords3 = rotate(pitch, roll, yaw, new double[]{xpos - lengthX, ypos, zpos - lengthZ});
+        double[] coords4 = rotate(pitch, roll, yaw, new double[]{xpos - lengthX, ypos, zpos});
+        coords1 = cameraToScreen(coords1);
+        coords2 = cameraToScreen(coords2);
+        coords3 = cameraToScreen(coords3);
+        coords4 = cameraToScreen(coords4);
         gc.setLineWidth(5);
         if (!(zpos > 0)) {
             gc.strokeLine(coords1[0], coords1[1], coords4[0], coords4[1]);
@@ -168,11 +179,15 @@ public class HelloApplication extends Application {
 
     }
 
-    public void drawVerticalSquare(GraphicsContext gc, double xpos, double ypos, double zpos, double lengthX, double lengthY, double lengthZ) {
-        double[] coords1 = cameraToScreen(new double[]{xpos, ypos, zpos});
-        double[] coords2 = cameraToScreen(new double[]{xpos, ypos - lengthY, zpos});
-        double[] coords3 = cameraToScreen(new double[]{xpos - lengthX, ypos - lengthY, zpos});
-        double[] coords4 = cameraToScreen(new double[]{xpos - lengthX, ypos, zpos});
+    public void drawVerticalSquare(GraphicsContext gc, double xpos, double ypos, double zpos, double lengthX, double lengthY, double lengthZ, double pitch, double roll, double yaw) {
+        double[] coords1 = rotate(pitch, roll, yaw, new double[]{xpos, ypos, zpos});
+        double[] coords2 = rotate(pitch, roll, yaw, new double[]{xpos, ypos - lengthY, zpos});
+        double[] coords3 = rotate(pitch, roll, yaw, new double[]{xpos - lengthX, ypos - lengthY, zpos});
+        double[] coords4 = rotate(pitch, roll, yaw, new double[]{xpos - lengthX, ypos, zpos});
+        coords1 = cameraToScreen(coords1);
+        coords2 = cameraToScreen(coords2);
+        coords3 = cameraToScreen(coords3);
+        coords4 = cameraToScreen(coords4);
         gc.setLineWidth(5);
         if (!(zpos > 0)) {
             gc.strokeLine(coords1[0], coords1[1], coords2[0], coords2[1]);
@@ -182,12 +197,12 @@ public class HelloApplication extends Application {
         }
     }
 
-    public void drawCube(GraphicsContext gc, double xpos, double ypos, double zpos, double lengthX, double lengthY, double lengthZ) {
+    public void drawCube(GraphicsContext gc, double xpos, double ypos, double zpos, double lengthX, double lengthY, double lengthZ, double pitch, double roll, double yaw) {
         gc.clearRect(0, 0, Constants.width, Constants.height);
-        drawFlatSquare(gc, xpos, ypos, zpos, lengthX, lengthY, lengthZ);
-        drawFlatSquare(gc, xpos, ypos - lengthY, zpos, lengthX, lengthY, lengthZ);
-        drawVerticalSquare(gc, xpos, ypos, zpos, lengthX, lengthY, lengthZ);
-        drawVerticalSquare(gc, xpos, ypos, zpos - lengthZ, lengthX, lengthY, lengthZ);
+        drawFlatSquare(gc, xpos, ypos, zpos, lengthX, lengthY, lengthZ, pitch, roll, yaw);
+        drawFlatSquare(gc, xpos, ypos - lengthY, zpos, lengthX, lengthY, lengthZ, pitch, roll, yaw);
+        drawVerticalSquare(gc, xpos, ypos, zpos, lengthX, lengthY, lengthZ, pitch, roll, yaw);
+        drawVerticalSquare(gc, xpos, ypos, zpos - lengthZ, lengthX, lengthY, lengthZ, pitch, roll, yaw);
     }
 
     public void drawSlantedTriangleFront(GraphicsContext gc, double xpos, double ypos, double zpos, double lengthX, double lengthY, double lengthZ) {
@@ -213,7 +228,7 @@ public class HelloApplication extends Application {
     }
 
     public void drawPyramid(GraphicsContext gc, double xpos, double ypos, double zpos, double lengthX, double lengthY, double lengthZ) {
-        drawFlatSquare(gc, xpos, ypos, zpos, lengthX, lengthY, lengthZ);
+        drawFlatSquare(gc, xpos, ypos, zpos, lengthX, lengthY, lengthZ, 0, 0, 0);
         drawSlantedTriangleFront(gc, xpos, ypos, zpos, lengthX, lengthY, lengthZ);
         drawSlantedTriangleBack(gc, xpos, ypos, zpos - lengthZ, lengthX, lengthY, lengthZ);
     }
