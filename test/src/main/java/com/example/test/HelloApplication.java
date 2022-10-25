@@ -106,8 +106,8 @@ public class HelloApplication extends Application {
                 zoff += 15 * delta * W.get();
                 zoff -= 15 * delta * S.get();
                 yoff += yspeed.get();
-                zrot += 1 * delta * RIGHT.get();
-                zrot -= 1 * delta * LEFT.get();
+                zrot -= 1 * delta * RIGHT.get();
+                zrot += 1 * delta * LEFT.get();
                 yspeed.set(yspeed.get() - (9.8 * delta));
                 if (yoff < -(50 * SHIFT.get())) {
                     yspeed.set(-5d);
@@ -125,9 +125,9 @@ public class HelloApplication extends Application {
     }
 
     public void drawScreen(Canvas canvas) {
-        drawCube(canvas.getGraphicsContext2D(), 0 + xoff, Constants.footLevel + yoff, -100 + zoff, 100, 300, 50, zrot, 0, 0);
-        drawPyramid(canvas.getGraphicsContext2D(), 200 + xoff, Constants.footLevel + yoff, -50 + zoff, 300, 100, 10);
-        drawPyramid(canvas.getGraphicsContext2D(), 300 + xoff, Constants.footLevel + yoff, -50 + zoff, 100, 300, 10);
+        drawCube(canvas.getGraphicsContext2D(), 0 + xoff, Constants.footLevel + yoff, -100 + zoff, 100, 300, 50, 0, zrot, 0);
+        drawPyramid(canvas.getGraphicsContext2D(), 200 + xoff, Constants.footLevel + yoff, -50 + zoff, 300, 100, 10, 0, zrot, 0);
+        drawPyramid(canvas.getGraphicsContext2D(), 300 + xoff, Constants.footLevel + yoff, -50 + zoff, 100, 300, 10, 0, zrot, 0);
     }
 
     public static void main(String[] args) {
@@ -205,10 +205,13 @@ public class HelloApplication extends Application {
         drawVerticalSquare(gc, xpos, ypos, zpos - lengthZ, lengthX, lengthY, lengthZ, pitch, roll, yaw);
     }
 
-    public void drawSlantedTriangleFront(GraphicsContext gc, double xpos, double ypos, double zpos, double lengthX, double lengthY, double lengthZ) {
-        double[] coords1 = cameraToScreen(new double[]{xpos, ypos, zpos});
-        double[] coords2 = cameraToScreen(new double[]{xpos - (lengthX / 2), ypos - lengthY, zpos - (lengthZ / 2)});
-        double[] coords3 = cameraToScreen(new double[]{xpos - lengthX, ypos, zpos});
+    public void drawSlantedTriangleFront(GraphicsContext gc, double xpos, double ypos, double zpos, double lengthX, double lengthY, double lengthZ, double pitch, double roll, double yaw) {
+        double[] coords1 = rotate(pitch,roll,yaw, new double[]{xpos, ypos, zpos});
+        double[] coords2 = rotate(pitch, roll, yaw, new double[]{xpos - (lengthX / 2), ypos - lengthY, zpos - (lengthZ / 2)});
+        double[] coords3 = rotate(pitch, roll, yaw, new double[]{xpos - lengthX, ypos, zpos});
+        coords1 = cameraToScreen(coords1);
+        coords2 = cameraToScreen(coords2);
+        coords3 = cameraToScreen(coords3);
         if (!(zpos > 0)) {
             gc.strokeLine(coords1[0], coords1[1], coords2[0], coords2[1]);
             gc.strokeLine(coords2[0], coords2[1], coords3[0], coords3[1]);
@@ -216,10 +219,13 @@ public class HelloApplication extends Application {
         }
     }
 
-    public void drawSlantedTriangleBack(GraphicsContext gc, double xpos, double ypos, double zpos, double lengthX, double lengthY, double lengthZ) {
-        double[] coords1 = cameraToScreen(new double[]{xpos, ypos, zpos});
-        double[] coords2 = cameraToScreen(new double[]{xpos - (lengthX / 2), ypos - lengthY, zpos + (lengthZ / 2)});
-        double[] coords3 = cameraToScreen(new double[]{xpos - lengthX, ypos, zpos});
+    public void drawSlantedTriangleBack(GraphicsContext gc, double xpos, double ypos, double zpos, double lengthX, double lengthY, double lengthZ, double pitch, double roll, double yaw) {
+        double[] coords1 = rotate(pitch,roll,yaw, new double[]{xpos, ypos, zpos});
+        double[] coords2 = rotate(pitch, roll, yaw, new double[]{xpos - (lengthX / 2), ypos - lengthY, zpos + (lengthZ / 2)});
+        double[] coords3 = rotate(pitch, roll, yaw, new double[]{xpos - lengthX, ypos, zpos});
+        coords1 = cameraToScreen(coords1);
+        coords2 = cameraToScreen(coords2);
+        coords3 = cameraToScreen(coords3);
         if (!(zpos > -lengthZ)) {
             gc.strokeLine(coords1[0], coords1[1], coords2[0], coords2[1]);
             gc.strokeLine(coords2[0], coords2[1], coords3[0], coords3[1]);
@@ -227,10 +233,10 @@ public class HelloApplication extends Application {
         }
     }
 
-    public void drawPyramid(GraphicsContext gc, double xpos, double ypos, double zpos, double lengthX, double lengthY, double lengthZ) {
-        drawFlatSquare(gc, xpos, ypos, zpos, lengthX, lengthY, lengthZ, 0, 0, 0);
-        drawSlantedTriangleFront(gc, xpos, ypos, zpos, lengthX, lengthY, lengthZ);
-        drawSlantedTriangleBack(gc, xpos, ypos, zpos - lengthZ, lengthX, lengthY, lengthZ);
+    public void drawPyramid(GraphicsContext gc, double xpos, double ypos, double zpos, double lengthX, double lengthY, double lengthZ, double pitch, double roll, double yaw) {
+        drawFlatSquare(gc, xpos, ypos, zpos, lengthX, lengthY, lengthZ, pitch, roll, yaw);
+        drawSlantedTriangleFront(gc, xpos, ypos, zpos, lengthX, lengthY, lengthZ, pitch, roll, yaw);
+        drawSlantedTriangleBack(gc, xpos, ypos, zpos - lengthZ, lengthX, lengthY, lengthZ, pitch, roll, yaw);
     }
 
     public double[] rotate(double pitch, double roll, double yaw, double[] coords) {
