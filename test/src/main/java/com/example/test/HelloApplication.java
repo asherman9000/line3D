@@ -17,14 +17,16 @@ public class HelloApplication extends Application {
     private double xoff = 0;
     private double yoff = 0;
     private double zoff = 0;
+    private double zrot = 0;
     private final double[][] localToWorld = {{0.718672, 0.615033, -0.3324214, 0},
             {-0.393732, 0.744416, 0.5539277, 0},
             {0.573024, -0.259959, 0.777216, 0},
             {0.526967, 1.254234, -2.53215, 1}};
     private final double[][] inverse = {{0.71506512294878439573, -0.38753000039982901159, 0.58203453231055897194, 0},
-            {0.6169530762982229319, 0.74126839150965075212, -0.26443188230077389605	, 0},
+            {0.6169530762982229319, 0.74126839150965075212, -0.26443188230077389605, 0},
             {-0.32084642139533217849, 0.53365265349345474029, 0.76907680293026311148, 0},
             {-1.963050513278967783, 0.62578006850743281385, 1.9723642926173962546, 1}};
+
     @Override
     public void start(Stage stage) {
         Group root = new Group();
@@ -32,12 +34,13 @@ public class HelloApplication extends Application {
         Canvas canvas = new Canvas(Constants.width, Constants.height);
         root.getChildren().add(canvas);
         root.getChildren().add(pane);
-        Scene scene = new Scene(root,Constants.width,Constants.height);
+        Scene scene = new Scene(root, Constants.width, Constants.height);
         AtomicInteger W = new AtomicInteger();
         AtomicInteger S = new AtomicInteger();
         AtomicInteger A = new AtomicInteger();
         AtomicInteger D = new AtomicInteger();
         AtomicInteger SHIFT = new AtomicInteger();
+        AtomicInteger RIGHT = new AtomicInteger();
         AtomicReference<Double> yspeed = new AtomicReference<>((double) 0);
 
         scene.setOnKeyPressed(event -> {
@@ -61,6 +64,9 @@ public class HelloApplication extends Application {
             if (event.getCode() == KeyCode.SHIFT) {
                 SHIFT.set(1);
             }
+            if (event.getCode() == KeyCode.RIGHT) {
+                RIGHT.set(1);
+            }
 
         });
         scene.setOnKeyReleased(event -> {
@@ -79,19 +85,23 @@ public class HelloApplication extends Application {
             if (event.getCode() == KeyCode.SHIFT) {
                 SHIFT.set(0);
             }
+            if (event.getCode() == KeyCode.RIGHT) {
+                RIGHT.set(0);
+            }
         });
         new AnimationTimer() {
 
             @Override
             public void handle(long l) {
                 double delta = Time.deltaTime();
-                xoff-=60*delta * D.get();
-                xoff+=60*delta * A.get();
-                zoff+=0.15*delta * W.get();
-                zoff-=0.15*delta * S.get();
-                yoff+=yspeed.get();
-                yspeed.set(yspeed.get()-(9.8*delta));
-                if (yoff< -(50 * SHIFT.get())) {
+                xoff -= 60 * delta * D.get();
+                xoff += 60 * delta * A.get();
+                zoff += 0.15 * delta * W.get();
+                zoff -= 0.15 * delta * S.get();
+                yoff += yspeed.get();
+                zrot += 1 * delta * RIGHT.get();
+                yspeed.set(yspeed.get() - (9.8 * delta));
+                if (yoff < -(50 * SHIFT.get())) {
                     yspeed.set(-5d);
                     yoff = -(50 * SHIFT.get());
                 }
@@ -107,45 +117,51 @@ public class HelloApplication extends Application {
     }
 
     public void drawScreen(Canvas canvas) {
-        drawCube(canvas.getGraphicsContext2D(), 0+ xoff , Constants.footLevel + yoff, -1 +zoff, 100, 300, 0.5);
-        drawPyramid(canvas.getGraphicsContext2D(), 200+xoff, Constants.footLevel + yoff, 1 + zoff, 100, 100 , 0.1);
+        double[] cube1Coords = rotate(0, 0 , zrot, new double[] {0 + xoff, Constants.footLevel + yoff, -1 + zoff});
+        drawCube(canvas.getGraphicsContext2D(), cube1Coords[0], cube1Coords[1], cube1Coords[2], 100, 300, 0.5);
+        drawPyramid(canvas.getGraphicsContext2D(), 200 + xoff, Constants.footLevel + yoff, -0.5 + zoff, 300, 100, 0.1);
+        drawPyramid(canvas.getGraphicsContext2D(), 300 + xoff, Constants.footLevel + yoff, -0.5 + zoff, 100, 300, 0.1);
     }
+
     public static void main(String[] args) {
         launch();
     }
 
     public double[] localToWorldCoords(double[] local) {
-         double[] world = {(local[0]*localToWorld[0][0])+(local[1]*localToWorld[1][0])+(local[2]*localToWorld[2][0])+localToWorld[3][0],
-                 (local[0]*localToWorld[0][1])+(local[1]*localToWorld[1][1])+(local[2]*localToWorld[2][1])+localToWorld[3][1],
-                 (local[0]*localToWorld[0][3])+(local[1]*localToWorld[1][3])+(local[2]*localToWorld[2][3])+localToWorld[3][3]};
-         return world;
+        double[] world = {(local[0] * localToWorld[0][0]) + (local[1] * localToWorld[1][0]) + (local[2] * localToWorld[2][0]) + localToWorld[3][0],
+                (local[0] * localToWorld[0][1]) + (local[1] * localToWorld[1][1]) + (local[2] * localToWorld[2][1]) + localToWorld[3][1],
+                (local[0] * localToWorld[0][3]) + (local[1] * localToWorld[1][3]) + (local[2] * localToWorld[2][3]) + localToWorld[3][3]};
+        return world;
     }
+
     public double[] worldToLocalCoords(double[] world) {
-        double[] local = {(world[0]*inverse[0][0])+(world[1]*inverse[1][0])+(world[2]*inverse[2][0])+inverse[3][0],
-                (world[0]*inverse[0][1])+(world[1]*inverse[1][1])+(world[2]*inverse[2][1])+inverse[3][1],
-                (world[0]*inverse[0][3])+(world[1]*inverse[1][3])+(world[2]*inverse[2][3])+inverse[3][3]};
+        double[] local = {(world[0] * inverse[0][0]) + (world[1] * inverse[1][0]) + (world[2] * inverse[2][0]) + inverse[3][0],
+                (world[0] * inverse[0][1]) + (world[1] * inverse[1][1]) + (world[2] * inverse[2][1]) + inverse[3][1],
+                (world[0] * inverse[0][3]) + (world[1] * inverse[1][3]) + (world[2] * inverse[2][3]) + inverse[3][3]};
         return local;
     }
+
     public double[] cameraToScreen(double[] camera) {
-        double[] screen = {camera[0]/-camera[2], camera[1]/-camera[2]};
-        screen[0] = (screen[0] + (Constants.width/2d))/Constants.width;
-        screen[1] = (screen[1] + (Constants.height/2d))/Constants.height;
+        double[] screen = {camera[0] / -camera[2], camera[1] / -camera[2]};
+        screen[0] = (screen[0] + (Constants.width / 2d)) / Constants.width;
+        screen[1] = (screen[1] + (Constants.height / 2d)) / Constants.height;
         screen[0] *= Constants.width;
         screen[1] *= Constants.height;
         return screen;
     }
+
     public void drawFlatSquare(GraphicsContext gc, double xpos, double ypos, double zpos, double lengthX, double lengthY, double lengthZ) {
         double[] coords1 = cameraToScreen(new double[]{xpos, ypos, zpos});
-        double[] coords2 = cameraToScreen(new double[]{xpos, ypos, zpos-lengthZ});
-        double[] coords3 = cameraToScreen(new double[]{xpos-lengthX, ypos, zpos-lengthZ});
-        double[] coords4 = cameraToScreen(new double[]{xpos-lengthX, ypos, zpos});
+        double[] coords2 = cameraToScreen(new double[]{xpos, ypos, zpos - lengthZ});
+        double[] coords3 = cameraToScreen(new double[]{xpos - lengthX, ypos, zpos - lengthZ});
+        double[] coords4 = cameraToScreen(new double[]{xpos - lengthX, ypos, zpos});
         gc.setLineWidth(5);
         if (!(zpos > 0)) {
-            gc.strokeLine(coords1[0],coords1[1],coords4[0],coords4[1]);
+            gc.strokeLine(coords1[0], coords1[1], coords4[0], coords4[1]);
             gc.strokeLine(coords1[0], coords1[1], coords2[0], coords2[1]);
-            gc.strokeLine(coords4[0],coords4[1],coords3[0],coords3[1]);
+            gc.strokeLine(coords4[0], coords4[1], coords3[0], coords3[1]);
         }
-        if (!(zpos-0.1 > 0)) {
+        if (!(zpos - 0.1 > 0)) {
             gc.strokeLine(coords3[0], coords3[1], coords2[0], coords2[1]);
         }
 
@@ -154,9 +170,9 @@ public class HelloApplication extends Application {
 
     public void drawVerticalSquare(GraphicsContext gc, double xpos, double ypos, double zpos, double lengthX, double lengthY, double lengthZ) {
         double[] coords1 = cameraToScreen(new double[]{xpos, ypos, zpos});
-        double[] coords2 = cameraToScreen(new double[]{xpos, ypos-lengthY, zpos});
-        double[] coords3 = cameraToScreen(new double[]{xpos-lengthX, ypos-lengthY, zpos});
-        double[] coords4 = cameraToScreen(new double[]{xpos-lengthX, ypos, zpos});
+        double[] coords2 = cameraToScreen(new double[]{xpos, ypos - lengthY, zpos});
+        double[] coords3 = cameraToScreen(new double[]{xpos - lengthX, ypos - lengthY, zpos});
+        double[] coords4 = cameraToScreen(new double[]{xpos - lengthX, ypos, zpos});
         gc.setLineWidth(5);
         if (!(zpos > 0)) {
             gc.strokeLine(coords1[0], coords1[1], coords2[0], coords2[1]);
@@ -169,34 +185,66 @@ public class HelloApplication extends Application {
     public void drawCube(GraphicsContext gc, double xpos, double ypos, double zpos, double lengthX, double lengthY, double lengthZ) {
         gc.clearRect(0, 0, Constants.width, Constants.height);
         drawFlatSquare(gc, xpos, ypos, zpos, lengthX, lengthY, lengthZ);
-        drawFlatSquare(gc, xpos, ypos-lengthY, zpos, lengthX, lengthY, lengthZ);
+        drawFlatSquare(gc, xpos, ypos - lengthY, zpos, lengthX, lengthY, lengthZ);
         drawVerticalSquare(gc, xpos, ypos, zpos, lengthX, lengthY, lengthZ);
-        drawVerticalSquare(gc, xpos, ypos, zpos-lengthZ, lengthX, lengthY, lengthZ);
+        drawVerticalSquare(gc, xpos, ypos, zpos - lengthZ, lengthX, lengthY, lengthZ);
     }
 
     public void drawSlantedTriangleFront(GraphicsContext gc, double xpos, double ypos, double zpos, double lengthX, double lengthY, double lengthZ) {
-        double[] coords1 = cameraToScreen(new double[]{xpos,ypos,zpos});
-        double[] coords2 = cameraToScreen(new double[]{xpos-(lengthX/2),ypos-lengthY,zpos-(lengthZ/2)});
-        double[] coords3 = cameraToScreen(new double[]{xpos-lengthX,ypos,zpos});
+        double[] coords1 = cameraToScreen(new double[]{xpos, ypos, zpos});
+        double[] coords2 = cameraToScreen(new double[]{xpos - (lengthX / 2), ypos - lengthY, zpos - (lengthZ / 2)});
+        double[] coords3 = cameraToScreen(new double[]{xpos - lengthX, ypos, zpos});
         if (!(zpos > 0)) {
             gc.strokeLine(coords1[0], coords1[1], coords2[0], coords2[1]);
             gc.strokeLine(coords2[0], coords2[1], coords3[0], coords3[1]);
             gc.strokeLine(coords1[0], coords1[1], coords3[0], coords3[1]);
         }
     }
+
     public void drawSlantedTriangleBack(GraphicsContext gc, double xpos, double ypos, double zpos, double lengthX, double lengthY, double lengthZ) {
-        double[] coords1 = cameraToScreen(new double[]{xpos,ypos,zpos});
-        double[] coords2 = cameraToScreen(new double[]{xpos-(lengthX/2),ypos-lengthY,zpos+(lengthZ/2)});
-        double[] coords3 = cameraToScreen(new double[]{xpos-lengthX,ypos,zpos});
-        if (!(zpos > lengthZ/2)) {
+        double[] coords1 = cameraToScreen(new double[]{xpos, ypos, zpos});
+        double[] coords2 = cameraToScreen(new double[]{xpos - (lengthX / 2), ypos - lengthY, zpos + (lengthZ / 2)});
+        double[] coords3 = cameraToScreen(new double[]{xpos - lengthX, ypos, zpos});
+        if (!(zpos > -lengthZ)) {
             gc.strokeLine(coords1[0], coords1[1], coords2[0], coords2[1]);
             gc.strokeLine(coords2[0], coords2[1], coords3[0], coords3[1]);
             gc.strokeLine(coords1[0], coords1[1], coords3[0], coords3[1]);
         }
     }
+
     public void drawPyramid(GraphicsContext gc, double xpos, double ypos, double zpos, double lengthX, double lengthY, double lengthZ) {
-        drawFlatSquare(gc,xpos,ypos,zpos,lengthX,lengthY,lengthZ);
-        drawSlantedTriangleFront(gc,xpos,ypos,zpos,lengthX,lengthY,lengthZ);
-        drawSlantedTriangleBack(gc,xpos,ypos,zpos-lengthZ,lengthX,lengthY,lengthZ);
+        drawFlatSquare(gc, xpos, ypos, zpos, lengthX, lengthY, lengthZ);
+        drawSlantedTriangleFront(gc, xpos, ypos, zpos, lengthX, lengthY, lengthZ);
+        drawSlantedTriangleBack(gc, xpos, ypos, zpos - lengthZ, lengthX, lengthY, lengthZ);
+    }
+
+    public double[] rotate(double pitch, double roll, double yaw, double[] coords) {
+        double cosa = Math.cos(yaw);
+        double sina = Math.sin(yaw);
+
+        double cosb = Math.cos(pitch);
+        var sinb = Math.sin(pitch);
+
+        double cosc = Math.cos(roll);
+        double sinc = Math.sin(roll);
+
+        double Axx = cosa*cosb;
+        double Axy = cosa*sinb*sinc - sina*cosc;
+        double Axz = cosa*sinb*cosc + sina*sinc;
+
+        double Ayx = sina*cosb;
+        double Ayy = sina*sinb*sinc + cosa*cosc;
+        double Ayz = sina*sinb*cosc - cosa*sinc;
+
+        double Azx = -sinb;
+        double Azy = cosb*sinc;
+        double Azz = cosb*cosc;
+
+        double px = coords[0];
+        double py = coords[1];
+        double pz = coords[2];
+
+        return new double[] {Axx*px + Axy*py + Axz*pz, Ayx*px + Ayy*py + Ayz*pz, Azx*px + Azy*py + Azz*pz};
     }
 }
+
