@@ -18,6 +18,7 @@ public class HelloApplication extends Application {
     private double yoff = 0;
     private double zoff = 0;
     private double zrot = 0;
+    private double xrot = 0;
     private final double[][] localToWorld = {{0.718672, 0.615033, -0.3324214, 0},
             {-0.393732, 0.744416, 0.5539277, 0},
             {0.573024, -0.259959, 0.777216, 0},
@@ -42,6 +43,8 @@ public class HelloApplication extends Application {
         AtomicInteger SHIFT = new AtomicInteger();
         AtomicInteger RIGHT = new AtomicInteger();
         AtomicInteger LEFT = new AtomicInteger();
+        AtomicInteger UP = new AtomicInteger();
+        AtomicInteger DOWN = new AtomicInteger();
         AtomicReference<Double> yspeed = new AtomicReference<>((double) 0);
 
         scene.setOnKeyPressed(event -> {
@@ -71,6 +74,12 @@ public class HelloApplication extends Application {
             if (event.getCode() == KeyCode.LEFT) {
                 LEFT.set(1);
             }
+            if (event.getCode() == KeyCode.UP) {
+                UP.set(1);
+            }
+            if (event.getCode() == KeyCode.DOWN) {
+                DOWN.set(1);
+            }
 
         });
         scene.setOnKeyReleased(event -> {
@@ -95,19 +104,26 @@ public class HelloApplication extends Application {
             if (event.getCode() == KeyCode.LEFT) {
                 LEFT.set(0);
             }
+            if (event.getCode() == KeyCode.UP) {
+                UP.set(0);
+            }
+            if (event.getCode() == KeyCode.DOWN) {
+                DOWN.set(0);
+            }
         });
         new AnimationTimer() {
 
             @Override
             public void handle(long l) {
                 double delta = Time.deltaTime();
-                xoff -= 60 * delta * D.get();
-                xoff += 60 * delta * A.get();
-                zoff += 150 * delta * W.get();
-                zoff -= 150 * delta * S.get();
+                zrot += 1 * delta * RIGHT.get();
+                zrot -= 1 * delta * LEFT.get();
+                xoff -= (Constants.movementXSpeed * delta * D.get()) * Math.cos(zrot) + (Constants.movementZSpeed * delta * W.get()) * Math.sin(zrot);
+                xoff += (Constants.movementXSpeed * delta * A.get()) * Math.cos(zrot) + (Constants.movementZSpeed * delta * S.get()) * Math.sin(zrot);
+                zoff += (Constants.movementZSpeed * delta * W.get()) * Math.cos(zrot) + (Constants.movementXSpeed * delta * A.get()) * Math.sin(zrot);
+                zoff -= (Constants.movementZSpeed * delta * S.get()) * Math.cos(zrot) + (Constants.movementXSpeed * delta * D.get()) * Math.sin(zrot);
                 yoff += yspeed.get();
-                zrot -= 1 * delta * RIGHT.get();
-                zrot += 1 * delta * LEFT.get();
+
                 yspeed.set(yspeed.get() - (9.8 * delta));
                 if (yoff < -(50 * SHIFT.get())) {
                     yspeed.set(-5d);
@@ -122,12 +138,13 @@ public class HelloApplication extends Application {
         stage.setScene(scene);
         drawScreen(canvas);
         stage.show();
+        stage.setFullScreen(true);
     }
 
     public void drawScreen(Canvas canvas) {
-        drawCube(canvas.getGraphicsContext2D(), 0 + xoff, Constants.footLevel + yoff, -1000 + zoff, 100, 100, 100, 0, 0, zrot);
-        drawPyramid(canvas.getGraphicsContext2D(), 200 + xoff, Constants.footLevel + yoff, -500 + zoff, 300, 100, 100, 0, 0, zrot);
-        drawPyramid(canvas.getGraphicsContext2D(), 300 + xoff, Constants.footLevel + yoff, -500 + zoff, 100, 300, 100, 0, 0, zrot);
+        drawCube(canvas.getGraphicsContext2D(), 0 + xoff, Constants.footLevel + yoff, -1000 + zoff, 100, 100, 100, zrot, xrot, 0);
+        drawPyramid(canvas.getGraphicsContext2D(), 200 + xoff, Constants.footLevel + yoff, -500 + zoff, 300, 100, 100, zrot, xrot, 0);
+        drawPyramid(canvas.getGraphicsContext2D(), 300 + xoff, Constants.footLevel + yoff, -500 + zoff, 100, 300, 100, zrot, xrot, 0);
     }
 
     public static void main(String[] args) {
@@ -149,7 +166,7 @@ public class HelloApplication extends Application {
     }
 
     public double[] cameraToScreen(double[] camera) {
-        double[] screen = {camera[0] / -(camera[2]/1000), camera[1] / -(camera[2]/1000)};
+        double[] screen = {camera[0] / -(camera[2]/1000), camera[1] / -(camera[2]/1000), camera[2]};
         screen[0] = (screen[0] + (Constants.width / 2d)) / Constants.width;
         screen[1] = (screen[1] + (Constants.height / 2d)) / Constants.height;
         screen[0] *= Constants.width;
@@ -167,12 +184,16 @@ public class HelloApplication extends Application {
         coords3 = cameraToScreen(coords3);
         coords4 = cameraToScreen(coords4);
         gc.setLineWidth(5);
-        if (!(zpos > 0)) {
+        if (!(coords1[2] > Constants.renderDistance || coords4[2] > Constants.renderDistance)) {
             gc.strokeLine(coords1[0], coords1[1], coords4[0], coords4[1]);
+        }
+        if (!(coords2[2] > Constants.renderDistance || coords1[2] > Constants.renderDistance)) {
             gc.strokeLine(coords1[0], coords1[1], coords2[0], coords2[1]);
+        }
+        if (!(coords3[2] > Constants.renderDistance || coords4[2] > Constants.renderDistance)) {
             gc.strokeLine(coords4[0], coords4[1], coords3[0], coords3[1]);
         }
-        if (!(zpos - 0.1 > 0)) {
+        if (!(coords3[2] > Constants.renderDistance || coords2[2] > Constants.renderDistance)) {
             gc.strokeLine(coords3[0], coords3[1], coords2[0], coords2[1]);
         }
 
@@ -189,11 +210,17 @@ public class HelloApplication extends Application {
         coords3 = cameraToScreen(coords3);
         coords4 = cameraToScreen(coords4);
         gc.setLineWidth(5);
-        if (!(zpos > 0)) {
-            gc.strokeLine(coords1[0], coords1[1], coords2[0], coords2[1]);
-            gc.strokeLine(coords3[0], coords3[1], coords2[0], coords2[1]);
-            gc.strokeLine(coords4[0], coords4[1], coords3[0], coords3[1]);
+        if (!(coords1[2] > Constants.renderDistance || coords4[2] > Constants.renderDistance)) {
             gc.strokeLine(coords1[0], coords1[1], coords4[0], coords4[1]);
+        }
+        if (!(coords2[2] > Constants.renderDistance || coords1[2] > Constants.renderDistance)) {
+            gc.strokeLine(coords1[0], coords1[1], coords2[0], coords2[1]);
+        }
+        if (!(coords3[2] > Constants.renderDistance || coords4[2] > Constants.renderDistance)) {
+            gc.strokeLine(coords4[0], coords4[1], coords3[0], coords3[1]);
+        }
+        if (!(coords3[2] > Constants.renderDistance || coords2[2] > Constants.renderDistance)) {
+            gc.strokeLine(coords3[0], coords3[1], coords2[0], coords2[1]);
         }
     }
 
@@ -212,9 +239,13 @@ public class HelloApplication extends Application {
         coords1 = cameraToScreen(coords1);
         coords2 = cameraToScreen(coords2);
         coords3 = cameraToScreen(coords3);
-        if (!(zpos > 0)) {
+        if (!(coords1[2] > Constants.renderDistance || coords2[2] > Constants.renderDistance)) {
             gc.strokeLine(coords1[0], coords1[1], coords2[0], coords2[1]);
+        }
+        if (!(coords2[2] > Constants.renderDistance || coords3[2] > Constants.renderDistance)) {
             gc.strokeLine(coords2[0], coords2[1], coords3[0], coords3[1]);
+        }
+        if (!(coords3[2] > Constants.renderDistance || coords1[2] > Constants.renderDistance)) {
             gc.strokeLine(coords1[0], coords1[1], coords3[0], coords3[1]);
         }
     }
@@ -226,9 +257,13 @@ public class HelloApplication extends Application {
         coords1 = cameraToScreen(coords1);
         coords2 = cameraToScreen(coords2);
         coords3 = cameraToScreen(coords3);
-        if (!(zpos > -lengthZ)) {
+        if (!(coords1[2] > Constants.renderDistance || coords2[2] > Constants.renderDistance)) {
             gc.strokeLine(coords1[0], coords1[1], coords2[0], coords2[1]);
+        }
+        if (!(coords2[2] > Constants.renderDistance || coords3[2] > Constants.renderDistance)) {
             gc.strokeLine(coords2[0], coords2[1], coords3[0], coords3[1]);
+        }
+        if (!(coords3[2] > Constants.renderDistance || coords1[2] > Constants.renderDistance)) {
             gc.strokeLine(coords1[0], coords1[1], coords3[0], coords3[1]);
         }
     }
@@ -244,7 +279,7 @@ public class HelloApplication extends Application {
         double sina = Math.sin(yaw);
 
         double cosb = Math.cos(pitch);
-        var sinb = Math.sin(pitch);
+        double sinb = Math.sin(pitch);
 
         double cosc = Math.cos(roll);
         double sinc = Math.sin(roll);
