@@ -103,8 +103,8 @@ public class HelloApplication extends Application {
                 double delta = Time.deltaTime();
                 xoff -= 60 * delta * D.get();
                 xoff += 60 * delta * A.get();
-                zoff += 15 * delta * W.get();
-                zoff -= 15 * delta * S.get();
+                zoff += 150 * delta * W.get();
+                zoff -= 150 * delta * S.get();
                 yoff += yspeed.get();
                 zrot -= 1 * delta * RIGHT.get();
                 zrot += 1 * delta * LEFT.get();
@@ -125,9 +125,9 @@ public class HelloApplication extends Application {
     }
 
     public void drawScreen(Canvas canvas) {
-        drawCube(canvas.getGraphicsContext2D(), 0 + xoff, Constants.footLevel + yoff, -100 + zoff, 100, 300, 50, 0, zrot, 0);
-        drawPyramid(canvas.getGraphicsContext2D(), 200 + xoff, Constants.footLevel + yoff, -50 + zoff, 300, 100, 10, 0, zrot, 0);
-        drawPyramid(canvas.getGraphicsContext2D(), 300 + xoff, Constants.footLevel + yoff, -50 + zoff, 100, 300, 10, 0, zrot, 0);
+        drawCube(canvas.getGraphicsContext2D(), 0 + xoff, Constants.footLevel + yoff, -1000 + zoff, 100, 100, 100, 0, 0, zrot);
+        drawPyramid(canvas.getGraphicsContext2D(), 200 + xoff, Constants.footLevel + yoff, -500 + zoff, 300, 100, 100, 0, 0, zrot);
+        drawPyramid(canvas.getGraphicsContext2D(), 300 + xoff, Constants.footLevel + yoff, -500 + zoff, 100, 300, 100, 0, 0, zrot);
     }
 
     public static void main(String[] args) {
@@ -149,7 +149,7 @@ public class HelloApplication extends Application {
     }
 
     public double[] cameraToScreen(double[] camera) {
-        double[] screen = {camera[0] / -(camera[2]/100), camera[1] / -(camera[2]/100)};
+        double[] screen = {camera[0] / -(camera[2]/1000), camera[1] / -(camera[2]/1000)};
         screen[0] = (screen[0] + (Constants.width / 2d)) / Constants.width;
         screen[1] = (screen[1] + (Constants.height / 2d)) / Constants.height;
         screen[0] *= Constants.width;
