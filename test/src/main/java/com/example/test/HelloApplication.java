@@ -19,7 +19,6 @@ public class HelloApplication extends Application {
     private double zoff = 0;
     private double zrot = 0;
     private double xrot = 0;
-    Cube cube;
     private final double[][] localToWorld = {{0.718672, 0.615033, -0.3324214, 0},
             {-0.393732, 0.744416, 0.5539277, 0},
             {0.573024, -0.259959, 0.777216, 0},
@@ -47,7 +46,10 @@ public class HelloApplication extends Application {
         AtomicInteger UP = new AtomicInteger();
         AtomicInteger DOWN = new AtomicInteger();
         AtomicReference<Double> yspeed = new AtomicReference<>((double) 0);
-        cube = new Cube(canvas);
+        Cube cube = new Cube(0 + xoff, Constants.footLevel + yoff, -1000 + zoff, 100, 100, 100, xrot, 0, zrot, canvas);
+        Pyramid pyramid1 = new Pyramid(200 + xoff, Constants.footLevel + yoff, -500 + zoff, 300, 100, 200, xrot, 0, zrot, canvas);
+        Pyramid pyramid2 = new Pyramid(300 + xoff, Constants.footLevel + yoff, -500 + zoff, 100, 300, 100, xrot, 0, zrot, canvas);
+
         scene.setOnKeyPressed(event -> {
             if (event.getCode() == KeyCode.W) {
                 W.set(1);
@@ -131,21 +133,20 @@ public class HelloApplication extends Application {
                     yoff = -(50 * SHIFT.get());
                 }
 
-                drawScreen(canvas);
+                drawScreen(canvas, cube, pyramid1, pyramid2);
 
             }
         }.start();
-        cube.draw(canvas.getGraphicsContext2D(), 0 + xoff, Constants.footLevel + yoff, -1000 + zoff, 100, 100, 100, zrot, xrot, 0);
         stage.setScene(scene);
         drawScreen(canvas);
         stage.show();
         stage.setFullScreen(true);
     }
 
-    public void drawScreen(Canvas canvas) {
-        cube.draw(canvas.getGraphicsContext2D(), 0 + xoff, Constants.footLevel + yoff, -1000 + zoff, 100, 100, 100, zrot, xrot, 0);
-        drawPyramid(canvas.getGraphicsContext2D(), 200 + xoff, Constants.footLevel + yoff, -500 + zoff, 300, 100, 200, zrot, xrot, 0);
-        drawPyramid(canvas.getGraphicsContext2D(), 300 + xoff, Constants.footLevel + yoff, -500 + zoff, 100, 300, 100, zrot, xrot, 0);
+    public void drawScreen(Canvas canvas, Object... entity) {
+        for (Object ob : entity) {
+            ob.draw(canvas.getGraphicsContext2D(),xoff, yoff, zoff, xrot, 0, zrot);
+        }
     }
 
     public static void main(String[] args) {
@@ -164,111 +165,6 @@ public class HelloApplication extends Application {
                 (world[0] * inverse[0][1]) + (world[1] * inverse[1][1]) + (world[2] * inverse[2][1]) + inverse[3][1],
                 (world[0] * inverse[0][3]) + (world[1] * inverse[1][3]) + (world[2] * inverse[2][3]) + inverse[3][3]};
         return local;
-    }
-
-    public double[] cameraToScreen(double[] camera) {
-        double[] screen = {camera[0] / -(camera[2]/1000), camera[1] / -(camera[2]/1000), camera[2]};
-        screen[0] = (screen[0] + (Constants.width / 2d)) / Constants.width;
-        screen[1] = (screen[1] + (Constants.height / 2d)) / Constants.height;
-        screen[0] *= Constants.width;
-        screen[1] *= Constants.height;
-        return screen;
-    }
-
-    public void drawFlatSquare(GraphicsContext gc, double xpos, double ypos, double zpos, double lengthX, double lengthY, double lengthZ, double pitch, double roll, double yaw) {
-        double[] coords1 = rotate(pitch, roll, yaw, new double[]{xpos, ypos, zpos});
-        double[] coords2 = rotate(pitch, roll, yaw, new double[]{xpos, ypos, zpos - lengthZ});
-        double[] coords3 = rotate(pitch, roll, yaw, new double[]{xpos - lengthX, ypos, zpos - lengthZ});
-        double[] coords4 = rotate(pitch, roll, yaw, new double[]{xpos - lengthX, ypos, zpos});
-        coords1 = cameraToScreen(coords1);
-        coords2 = cameraToScreen(coords2);
-        coords3 = cameraToScreen(coords3);
-        coords4 = cameraToScreen(coords4);
-        gc.setLineWidth(5);
-        if (!(coords1[2] > Constants.renderDistance || coords4[2] > Constants.renderDistance)) {
-            gc.strokeLine(coords1[0], coords1[1], coords4[0], coords4[1]);
-        }
-        if (!(coords2[2] > Constants.renderDistance || coords1[2] > Constants.renderDistance)) {
-            gc.strokeLine(coords1[0], coords1[1], coords2[0], coords2[1]);
-        }
-        if (!(coords3[2] > Constants.renderDistance || coords4[2] > Constants.renderDistance)) {
-            gc.strokeLine(coords4[0], coords4[1], coords3[0], coords3[1]);
-        }
-        if (!(coords3[2] > Constants.renderDistance || coords2[2] > Constants.renderDistance)) {
-            gc.strokeLine(coords3[0], coords3[1], coords2[0], coords2[1]);
-        }
-
-
-    }
-    public void drawSlantedTriangleFront(GraphicsContext gc, double xpos, double ypos, double zpos, double lengthX, double lengthY, double lengthZ, double pitch, double roll, double yaw) {
-        double[] coords1 = rotate(pitch,roll,yaw, new double[]{xpos, ypos, zpos});
-        double[] coords2 = rotate(pitch, roll, yaw, new double[]{xpos - (lengthX / 2), ypos - lengthY, zpos - (lengthZ / 2)});
-        double[] coords3 = rotate(pitch, roll, yaw, new double[]{xpos - lengthX, ypos, zpos});
-        coords1 = cameraToScreen(coords1);
-        coords2 = cameraToScreen(coords2);
-        coords3 = cameraToScreen(coords3);
-        if (!(coords1[2] > Constants.renderDistance || coords2[2] > Constants.renderDistance)) {
-            gc.strokeLine(coords1[0], coords1[1], coords2[0], coords2[1]);
-        }
-        if (!(coords2[2] > Constants.renderDistance || coords3[2] > Constants.renderDistance)) {
-            gc.strokeLine(coords2[0], coords2[1], coords3[0], coords3[1]);
-        }
-        if (!(coords3[2] > Constants.renderDistance || coords1[2] > Constants.renderDistance)) {
-            gc.strokeLine(coords1[0], coords1[1], coords3[0], coords3[1]);
-        }
-    }
-
-    public void drawSlantedTriangleBack(GraphicsContext gc, double xpos, double ypos, double zpos, double lengthX, double lengthY, double lengthZ, double pitch, double roll, double yaw) {
-        double[] coords1 = rotate(pitch,roll,yaw, new double[]{xpos, ypos, zpos});
-        double[] coords2 = rotate(pitch, roll, yaw, new double[]{xpos - (lengthX / 2), ypos - lengthY, zpos + (lengthZ / 2)});
-        double[] coords3 = rotate(pitch, roll, yaw, new double[]{xpos - lengthX, ypos, zpos});
-        coords1 = cameraToScreen(coords1);
-        coords2 = cameraToScreen(coords2);
-        coords3 = cameraToScreen(coords3);
-        if (!(coords1[2] > Constants.renderDistance || coords2[2] > Constants.renderDistance)) {
-            gc.strokeLine(coords1[0], coords1[1], coords2[0], coords2[1]);
-        }
-        if (!(coords2[2] > Constants.renderDistance || coords3[2] > Constants.renderDistance)) {
-            gc.strokeLine(coords2[0], coords2[1], coords3[0], coords3[1]);
-        }
-        if (!(coords3[2] > Constants.renderDistance || coords1[2] > Constants.renderDistance)) {
-            gc.strokeLine(coords1[0], coords1[1], coords3[0], coords3[1]);
-        }
-    }
-
-    public void drawPyramid(GraphicsContext gc, double xpos, double ypos, double zpos, double lengthX, double lengthY, double lengthZ, double pitch, double roll, double yaw) {
-        drawFlatSquare(gc, xpos, ypos, zpos, lengthX, lengthY, lengthZ, pitch, roll, yaw);
-        drawSlantedTriangleFront(gc, xpos, ypos, zpos, lengthX, lengthY, lengthZ, pitch, roll, yaw);
-        drawSlantedTriangleBack(gc, xpos, ypos, zpos - lengthZ, lengthX, lengthY, lengthZ, pitch, roll, yaw);
-    }
-
-    public double[] rotate(double pitch, double roll, double yaw, double[] coords) {
-        double cosa = Math.cos(yaw);
-        double sina = Math.sin(yaw);
-
-        double cosb = Math.cos(pitch);
-        double sinb = Math.sin(pitch);
-
-        double cosc = Math.cos(roll);
-        double sinc = Math.sin(roll);
-
-        double Axx = cosa*cosb;
-        double Axy = cosa*sinb*sinc - sina*cosc;
-        double Axz = cosa*sinb*cosc + sina*sinc;
-
-        double Ayx = sina*cosb;
-        double Ayy = sina*sinb*sinc + cosa*cosc;
-        double Ayz = sina*sinb*cosc - cosa*sinc;
-
-        double Azx = -sinb;
-        double Azy = cosb*sinc;
-        double Azz = cosb*cosc;
-
-        double px = coords[0];
-        double py = coords[1];
-        double pz = coords[2];
-
-        return new double[] {Axx*px + Axy*py + Axz*pz, Ayx*px + Ayy*py + Ayz*pz, Azx*px + Azy*py + Azz*pz};
     }
 }
 

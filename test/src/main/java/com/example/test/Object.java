@@ -14,6 +14,87 @@ public abstract class Object {
     private double roll;
     private double yaw;
     private Canvas canvas;
+
+    public void setXpos(double xpos) {
+        this.xpos = xpos;
+    }
+
+    public void setYpos(double ypos) {
+        this.ypos = ypos;
+    }
+
+    public void setZpos(double zpos) {
+        this.zpos = zpos;
+    }
+
+    public void setLengthX(double lengthX) {
+        this.lengthX = lengthX;
+    }
+
+    public void setLengthY(double lengthY) {
+        this.lengthY = lengthY;
+    }
+
+    public void setLengthZ(double lengthZ) {
+        this.lengthZ = lengthZ;
+    }
+
+    public void setPitch(double pitch) {
+        this.pitch = pitch;
+    }
+
+    public void setRoll(double roll) {
+        this.roll = roll;
+    }
+
+    public void setYaw(double yaw) {
+        this.yaw = yaw;
+    }
+
+    public void setCanvas(Canvas canvas) {
+        this.canvas = canvas;
+    }
+
+    public double getXpos() {
+        return xpos;
+    }
+
+    public double getYpos() {
+        return ypos;
+    }
+
+    public double getZpos() {
+        return zpos;
+    }
+
+    public double getLengthX() {
+        return lengthX;
+    }
+
+    public double getLengthY() {
+        return lengthY;
+    }
+
+    public double getLengthZ() {
+        return lengthZ;
+    }
+
+    public double getPitch() {
+        return pitch;
+    }
+
+    public double getRoll() {
+        return roll;
+    }
+
+    public double getYaw() {
+        return yaw;
+    }
+
+    public Canvas getCanvas() {
+        return canvas;
+    }
+
     public Object(double xpos, double ypos, double zpos, double lengthX, double lengthY, double lengthZ, double pitch, double roll, double yaw, Canvas canvas) {
         this.xpos = xpos;
         this.ypos = ypos;
@@ -28,10 +109,10 @@ public abstract class Object {
     }
 
     public void drawFlatSquare(GraphicsContext gc, double xpos, double ypos, double zpos, double lengthX, double lengthY, double lengthZ, double pitch, double roll, double yaw) {
-        double[] coords1 = rotate(pitch, roll, yaw, new double[]{xpos, ypos, zpos});
-        double[] coords2 = rotate(pitch, roll, yaw, new double[]{xpos, ypos, zpos - lengthZ});
-        double[] coords3 = rotate(pitch, roll, yaw, new double[]{xpos - lengthX, ypos, zpos - lengthZ});
-        double[] coords4 = rotate(pitch, roll, yaw, new double[]{xpos - lengthX, ypos, zpos});
+        double[] coords1 = rotate(yaw, pitch, roll, new double[]{xpos, ypos, zpos});
+        double[] coords2 = rotate(yaw, pitch, roll, new double[]{xpos, ypos, zpos - lengthZ});
+        double[] coords3 = rotate(yaw, pitch, roll, new double[]{xpos - lengthX, ypos, zpos - lengthZ});
+        double[] coords4 = rotate(yaw, pitch, roll, new double[]{xpos - lengthX, ypos, zpos});
         coords1 = cameraToScreen(coords1);
         coords2 = cameraToScreen(coords2);
         coords3 = cameraToScreen(coords3);
@@ -54,10 +135,10 @@ public abstract class Object {
     }
 
     public void drawVerticalSquare(GraphicsContext gc, double xpos, double ypos, double zpos, double lengthX, double lengthY, double lengthZ, double pitch, double roll, double yaw) {
-        double[] coords1 = rotate(pitch, roll, yaw, new double[]{xpos, ypos, zpos});
-        double[] coords2 = rotate(pitch, roll, yaw, new double[]{xpos, ypos - lengthY, zpos});
-        double[] coords3 = rotate(pitch, roll, yaw, new double[]{xpos - lengthX, ypos - lengthY, zpos});
-        double[] coords4 = rotate(pitch, roll, yaw, new double[]{xpos - lengthX, ypos, zpos});
+        double[] coords1 = rotate(yaw, pitch, roll, new double[]{xpos, ypos, zpos});
+        double[] coords2 = rotate(yaw, pitch, roll, new double[]{xpos, ypos - lengthY, zpos});
+        double[] coords3 = rotate(yaw, pitch, roll, new double[]{xpos - lengthX, ypos - lengthY, zpos});
+        double[] coords4 = rotate(yaw, pitch, roll, new double[]{xpos - lengthX, ypos, zpos});
         coords1 = cameraToScreen(coords1);
         coords2 = cameraToScreen(coords2);
         coords3 = cameraToScreen(coords3);
@@ -114,9 +195,9 @@ public abstract class Object {
     }
 
     public void drawSlantedTriangleFront(GraphicsContext gc, double xpos, double ypos, double zpos, double lengthX, double lengthY, double lengthZ, double pitch, double roll, double yaw) {
-        double[] coords1 = rotate(pitch,roll,yaw, new double[]{xpos, ypos, zpos});
-        double[] coords2 = rotate(pitch, roll, yaw, new double[]{xpos - (lengthX / 2), ypos - lengthY, zpos - (lengthZ / 2)});
-        double[] coords3 = rotate(pitch, roll, yaw, new double[]{xpos - lengthX, ypos, zpos});
+        double[] coords1 = rotate(yaw, pitch, roll, new double[]{xpos, ypos, zpos});
+        double[] coords2 = rotate(yaw, pitch, roll, new double[]{xpos - (lengthX / 2), ypos - lengthY, zpos - (lengthZ / 2)});
+        double[] coords3 = rotate(yaw, pitch, roll, new double[]{xpos - lengthX, ypos, zpos});
         coords1 = cameraToScreen(coords1);
         coords2 = cameraToScreen(coords2);
         coords3 = cameraToScreen(coords3);
@@ -132,9 +213,9 @@ public abstract class Object {
     }
 
     public void drawSlantedTriangleBack(GraphicsContext gc, double xpos, double ypos, double zpos, double lengthX, double lengthY, double lengthZ, double pitch, double roll, double yaw) {
-        double[] coords1 = rotate(pitch,roll,yaw, new double[]{xpos, ypos, zpos});
-        double[] coords2 = rotate(pitch, roll, yaw, new double[]{xpos - (lengthX / 2), ypos - lengthY, zpos + (lengthZ / 2)});
-        double[] coords3 = rotate(pitch, roll, yaw, new double[]{xpos - lengthX, ypos, zpos});
+        double[] coords1 = rotate(yaw, pitch, roll, new double[]{xpos, ypos, zpos});
+        double[] coords2 = rotate(yaw, pitch, roll, new double[]{xpos - (lengthX / 2), ypos - lengthY, zpos + (lengthZ / 2)});
+        double[] coords3 = rotate(yaw, pitch, roll, new double[]{xpos - lengthX, ypos, zpos});
         coords1 = cameraToScreen(coords1);
         coords2 = cameraToScreen(coords2);
         coords3 = cameraToScreen(coords3);
@@ -151,5 +232,5 @@ public abstract class Object {
 
     public abstract void draw(GraphicsContext gc, double xpos, double ypos, double zpos, double lengthX, double lengthY, double lengthZ, double pitch, double roll, double yaw);
 
-    public abstract void draw(GraphicsContext gc);
+    public abstract void draw(GraphicsContext gc, double xoff, double yoff, double zoff, double xrot, double yrot, double zrot);
 }

@@ -4,15 +4,6 @@ import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 
 public class Cube extends Object{
-    private double xpos;
-    private double ypos;
-    private double zpos;
-    private double lengthX;
-    private double lengthY;
-    private double lengthZ;
-    private double pitch;
-    private double roll;
-    private double yaw;
     private Canvas canvas;
 
     public Cube(double xpos, double ypos, double zpos, double lengthX, double lengthY, double lengthZ, double pitch, double roll, double yaw, Canvas canvas) {
@@ -24,15 +15,15 @@ public class Cube extends Object{
 
     @Override
     public void draw(GraphicsContext gc, double xpos, double ypos, double zpos, double lengthX, double lengthY, double lengthZ, double pitch, double roll, double yaw) {
-        this.xpos = xpos;
-        this.ypos = ypos;
-        this.zpos = zpos;
-        this.lengthX = lengthX;
-        this.lengthY = lengthY;
-        this.lengthZ = lengthZ;
-        this.pitch = pitch;
-        this.roll = roll;
-        this.yaw = yaw;
+        setXpos(xpos);
+        setYpos(ypos);
+        setZpos(zpos);
+        setLengthX(lengthX);
+        setLengthY(lengthY);
+        setLengthZ(lengthZ);
+        setPitch(pitch);
+        setRoll(roll);
+        setYaw(yaw);
         gc.clearRect(0, 0, Constants.width, Constants.height);
         drawFlatSquare(gc, xpos, ypos, zpos, lengthX, lengthY, lengthZ, pitch, roll, yaw);
         drawFlatSquare(gc, xpos, ypos - lengthY, zpos, lengthX, lengthY, lengthZ, pitch, roll, yaw);
@@ -41,12 +32,12 @@ public class Cube extends Object{
     }
 
     @Override
-    public void draw(GraphicsContext gc) {
+    public void draw(GraphicsContext gc, double xoff, double yoff, double zoff, double xrot, double yrot, double zrot) {
         gc.clearRect(0, 0, Constants.width, Constants.height);
-        drawFlatSquare(gc, xpos, ypos, zpos, lengthX, lengthY, lengthZ, pitch, roll, yaw);
-        drawFlatSquare(gc, xpos, ypos - lengthY, zpos, lengthX, lengthY, lengthZ, pitch, roll, yaw);
-        drawVerticalSquare(gc, xpos, ypos, zpos, lengthX, lengthY, lengthZ, pitch, roll, yaw);
-        drawVerticalSquare(gc, xpos, ypos, zpos - lengthZ, lengthX, lengthY, lengthZ, pitch, roll, yaw);
+        drawFlatSquare(gc, getXpos() + xoff, getYpos() + yoff, getZpos() + zoff, getLengthX(), getLengthY(), getLengthZ(), getPitch() + xrot, getRoll() + yrot, getYaw() + zrot);
+        drawFlatSquare(gc, getXpos() + xoff, getYpos() + yoff - getLengthY(), getZpos() + zoff, getLengthX(), getLengthY(), getLengthZ(), getPitch() + xrot, getRoll() + yrot, getYaw() + zrot);
+        drawVerticalSquare(gc, getXpos() + xoff, getYpos() + yoff, getZpos() + zoff, getLengthX(), getLengthY(), getLengthZ(), getPitch() + xrot, getRoll() + yrot, getYaw() + zrot);
+        drawVerticalSquare(gc, getXpos() + xoff, getYpos() + yoff, getZpos() + zoff - getLengthZ(), getLengthX(), getLengthY(), getLengthZ(), getPitch() + xrot, getRoll() + yrot, getYaw() + zrot);
     }
 
 }
